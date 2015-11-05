@@ -9,11 +9,11 @@ hdrH=21;
 hdrW=9.5;
 
 hdrD=21.5; //?
-shD=8;
+shD=7.5;
 
-thickness = 13;
+thickness = 13.5;
 
-w = 1.8;
+w = 1.5;
 t = 0.5;
 e = 0.5;
 
@@ -31,20 +31,14 @@ difference(){
 	translate([-d/2+10, 0, -standHeight/2+0.9+2])rotate([0,0,90])ledSlot();
 	translate([50,0,0])cube([200,200,200],center=true);
 }
-
-module shell(){
-	for (b=[-1,0,1])
-		translate([-d/2-trampTh/2-0.5,b*25,-standHeight/2+ledH/2+2])rotate([0,-6,0])cube([2.5,2,ledH+8],center=true);
-	}
 }
 
-//shell();
 ledP=69/7;
 bP=62/7;
 
 module ledBoard() {
 	//board
-	cube([dBW,1,dBH],center=true);
+	//cube([dBW,1,dBH],center=true);
 	//LED strip
 	translate([0,5,dBH/2-ledH/2-6]) cube([ledW+t,ledD,ledH+t],center=true);
 	//big header
@@ -83,7 +77,17 @@ module ledSlot(){
 	//LED slot
 	ledBoard();
 	//board
-	translate([0,+2.5-10,0])cube([dBW+2*e,20,dBH+2*e],center=true);
+    lx = 72; ly = 1; lz = 10.5;
+	translate([0,+2.5-10,0]) {
+      difference() {
+        cube([dBW+2*e,20,dBH+2*e],center=true);
+        //translate([0,10-ly/2,-dBH/2+lz/2]) cube([lx,ly,lz],center=true);
+      	for (l=[1:8]){
+		  translate([-l*bP+39.85,10-ly/2,-20.5])rotate([90,0,0]) cylinder(r=4,h=ly,center=true);
+	}
+
+      }
+    }
 }
 
 $fn=50;
