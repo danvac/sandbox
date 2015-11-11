@@ -13,7 +13,7 @@ shD=7.5;
 
 thickness = 13.5;
 
-w = 1.5;
+w = 1.25;
 t = 0.5;
 e = 0.5;
 
@@ -68,7 +68,7 @@ module case(){
 module screwhole(){
 	difference(){
 		cylinder(r=2.7,h=shD,center=true);
-		cylinder(r=1,h=10,center=true);
+		cylinder(r=1.25,h=10,center=true);
 	}
 }
 
