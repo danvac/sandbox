@@ -13,7 +13,7 @@ shD=7.5;
 
 thickness = 13.5;
 
-w = 1.25;
+w = 1.5;
 t = 0.5;
 e = 0.5;
 
@@ -58,17 +58,23 @@ module case(){
 		ledSlot();
 	}
 	translate([-dBW/2+3,dBH/2-3,-2.5+shD/2]) screwhole();
-    translate([dBW/2-3,dBH/2-3,-2.5+shD/2]) screwhole();
-    translate([-dBW/2+3,-dBH/2+3,-2.5+shD/2]) screwhole();
-	translate([dBW/2-3,-dBH/2+3,-2.5+shD/2]) screwhole();
+    translate([dBW/2-3,dBH/2-3,-2.5+shD/2]) screwhole(270);
+    translate([-dBW/2+3,-dBH/2+3,-2.5+shD/2]) screwhole(90);
+	translate([dBW/2-3,-dBH/2+3,-2.5+shD/2]) screwhole(180);
 	
 	
 }
 
-module screwhole(){
+module screwhole(rotation=0) {
 	difference(){
-		cylinder(r=2.7,h=shD,center=true);
-		cylinder(r=1.25,h=10,center=true);
+        union() {
+          rotate([0,0,rotation]) {
+            translate([-1,0,0]) cube([7,2,shD],true);
+            translate([0,1,0]) cube([2,7,shD],true);
+          }
+		  cylinder(r=2.7,h=shD,center=true);
+        }
+		cylinder(r=1.15,h=10,center=true);
 	}
 }
 
