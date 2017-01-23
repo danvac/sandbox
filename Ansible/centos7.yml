@@ -1,0 +1,52 @@
+---
+- name: install workstation
+  hosts: localhost
+  tasks:
+  - name: cleanup firmwares
+    yum: state=absent name={{ item }}
+    with_items:
+    - aic94xx-firmware
+    - atmel-firmware
+    - b43-openfwwf
+    - bfa-firmware
+    - ipw????-firmware
+    - ivtv-firmware
+    - iwl*-firmware
+    - libertas-usb8388-firmware
+    - ql????-firmware
+    - rt?????-firmware
+    - xorg-x11-drv-ati-firmware
+    - zd1211-firmware
+  - name: cleanup NetworkManager
+    yum: state=absent name={{ item }}
+    with_items:
+    - NetworkManager-adsl
+    - NetworkManager-bluetooth
+    - NetworkManager-wifi
+    - NetworkManager-wwan
+  - name: install tree tool
+    yum: state=present name=tree
+  - name: install epel-release
+    yum: state=present name=epel-release
+  - name: install nux desktop
+    yum: state=present name=http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm
+  - name: install mplayer
+    yum: state=present name=mplayer
+  - name: install skype
+    yum: state=present name=skype
+  - name: install vlc
+    yum: state=present name=vlc
+  - name: install bluefish
+    yum: state=present name=bluefish
+
+  - name: add google-chrome repository
+    yum_repository:
+      name: google-chrome
+      description: google-chrome
+      baseurl: http://dl.google.com/linux/chrome/rpm/stable/$basearch
+      enabled: yes
+      gpgcheck: yes
+      gpgkey: https://dl-ssl.google.com/linux/linux_signing_key.pub
+  - name: install google-chrome-stable
+    yum: state=present name=google-chrome-stable
+...
