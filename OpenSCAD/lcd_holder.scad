@@ -60,10 +60,12 @@ module holder() {
     difference() {
         long(lcd_z);
         translate([wall_w/2+lcd_x, wall_w/2, 0]) screwhole(lcd_z);
+        translate([wall_w/2, wall_w/2, 0]) screwhole(lcd_z);
     }
     difference() {
         short(lcd_z);
         translate([wall_w/2, wall_w/2+lcd_y, 0]) screwhole(lcd_z);
+        translate([wall_w/2, wall_w/2, 0]) screwhole(lcd_z);
     }
 }
 
