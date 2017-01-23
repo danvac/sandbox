@@ -13,12 +13,17 @@ shD=7.5;
 
 thickness = 13.5;
 
-w = 1.5;
+w = 1.45; // w = 1.5;
 t = 0.5;
 e = 0.5;
 
 
 case();
+
+for (i=[1:4]){
+  translate([i*dBW/10,dBH/2 + t +w,0]) rotate([90,0,0])
+    cylinder(r1=2,r2=2,h=2*w,center=true);
+}
 
 
 module base(){
