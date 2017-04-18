@@ -75,7 +75,7 @@ int gmcCrs1 = 666;
 int gmcHdg = 666;
 
 void onGmcCrs1Change(unsigned int newValue) {
-  gmcCrs1 = 360.0 * newValue / 65535.0;
+  gmcCrs1 = int((360.0 * newValue / 65535.0) + gmcHdg) % 360;
   updateModule2 = true;
 }
 DcsBios::IntegerBuffer gmcCrs1Buffer(0x142a, 0xffff, 0, onGmcCrs1Change);
@@ -96,12 +96,12 @@ char rAlt[5];
 
 void onRaltDisplayChange(char* newValue) {
   strncpy(rAlt, newValue, sizeof(rAlt));
-  updateModule3 = true;
+  updateModule1 = true;
 }
 DcsBios::StringBuffer<4> raltDisplayBuffer(0x14aa, onRaltDisplayChange);
 
 void onPalt1000Change(unsigned int newValue) {
-  pAlt = 100000.0 * newValue / 65535.0;
+  pAlt = 10000.0 * newValue / 65535.0;
   updateModule3 = true;
 }
 DcsBios::IntegerBuffer palt1000Buffer(0x144e, 0xffff, 0, onPalt1000Change);
@@ -116,37 +116,29 @@ void progressVVI(TM1638 module, unsigned int value) {
   const unsigned int MIN = 0;
   const unsigned int CENTER = 32768;
   const unsigned int MAX = 65535;
-  const unsigned int MARK = 2730;
+  const unsigned int MARK = 4096;
 
-  if(value < CENTER - 1024) {
-         if(value < MIN + 1024)        module.setLEDs(0b0000111100000000);
-    else if(value < CENTER -11 * MARK) module.setLEDs(0b0000111100001000);
-    else if(value < CENTER -10 * MARK) module.setLEDs(0b0000111100001100);
-    else if(value < CENTER - 9 * MARK) module.setLEDs(0b0000111100001110);
-    else if(value < CENTER - 8 * MARK) module.setLEDs(0b0000111100001111);
-    else if(value < CENTER - 7 * MARK) module.setLEDs(0b0000011100001111);
-    else if(value < CENTER - 6 * MARK) module.setLEDs(0b0000001100001111);
-    else if(value < CENTER - 5 * MARK) module.setLEDs(0b0000000100001111);
-    else if(value < CENTER - 4 * MARK) module.setLEDs(0b0000000000001111);
-    else if(value < CENTER - 3 * MARK) module.setLEDs(0b0000000000001110);
-    else if(value < CENTER - 2 * MARK) module.setLEDs(0b0000000000001100);
-    else if(value < CENTER - 1024    ) module.setLEDs(0b0000000000001000);
+  if        (value > CENTER +  1000) {
+         if (value >   MAX  -  2768) module.setLEDs(0b1111000000000000);
+    else if (value > CENTER + 24000) module.setLEDs(0b1111000000010000);
+    else if (value > CENTER + 18000) module.setLEDs(0b1111000000110000);
+    else if (value > CENTER + 10000) module.setLEDs(0b1111000001110000);
+    else if (value > CENTER +  5000) module.setLEDs(0b1111000011110000);
+    else if (value > CENTER +  3000) module.setLEDs(0b0111000001110000);
+    else if (value > CENTER +  2000) module.setLEDs(0b0011000000110000);
+    else if (value > CENTER +  1000) module.setLEDs(0b0001000000010000);
   }
-  else if(value > CENTER + 1024) {
-         if(value > MAX - 1024)        module.setLEDs(0b1111000000000000);
-    else if(value > CENTER +11 * MARK) module.setLEDs(0b1111000000010000);
-    else if(value > CENTER +10 * MARK) module.setLEDs(0b1111000000110000);
-    else if(value > CENTER + 9 * MARK) module.setLEDs(0b1111000001110000);
-    else if(value > CENTER + 8 * MARK) module.setLEDs(0b1111000011110000);
-    else if(value > CENTER + 7 * MARK) module.setLEDs(0b1110000011110000);
-    else if(value > CENTER + 6 * MARK) module.setLEDs(0b1100000011110000);
-    else if(value > CENTER + 5 * MARK) module.setLEDs(0b1000000011110000);
-    else if(value > CENTER + 4 * MARK) module.setLEDs(0b0000000011110000);
-    else if(value > CENTER + 3 * MARK) module.setLEDs(0b0000000001110000);
-    else if(value > CENTER + 2 * MARK) module.setLEDs(0b0000000000110000);
-    else if(value > CENTER + 1024    ) module.setLEDs(0b0000000000010000);
+  else   if (value < CENTER -  1000) {
+         if (value <   MIN  +  2768) module.setLEDs(0b0000111100000000);
+    else if (value < CENTER - 24000) module.setLEDs(0b0000011100001000);
+    else if (value < CENTER - 18000) module.setLEDs(0b0000001100001100);
+    else if (value < CENTER - 10000) module.setLEDs(0b0000000100001110);
+    else if (value < CENTER -  5000) module.setLEDs(0b0000000000001111);
+    else if (value < CENTER -  3000) module.setLEDs(0b0000000000001110);
+    else if (value < CENTER -  2000) module.setLEDs(0b0000000000001100);
+    else if (value < CENTER -  1000) module.setLEDs(0b0000000000001000);
   }
-  else module.setLEDs(0b0000000000011000);
+  else                               module.setLEDs(0b0001000000011000);
 }
 
 /*
@@ -232,18 +224,21 @@ bool redraw = true;
 
 void onUhfFreqChange(char* newValue) {
   uhfFreq = newValue;
+  line0 = "UHF: " + uhfFreq;
   redraw = true;
 }
 DcsBios::StringBuffer<6> uhfFreqBuffer(0x14e2, onUhfFreqChange);
 
 void onVhfcommFreqChange(char* newValue) {
   vhfComm = newValue;
+  line1 = "VHF: " + vhfComm;
   redraw = true;
 }
 DcsBios::StringBuffer<7> vhfcommFreqBuffer(0x14d4, onVhfcommFreqChange);
 
 void onVhfnavFreqChange(char* newValue) {
   vhfNav = newValue;
+  line3 = "NAV: " + vhfNav;
   redraw = true;
 }
 DcsBios::StringBuffer<6> vhfnavFreqBuffer(0x14f0, onVhfnavFreqChange);
@@ -257,6 +252,7 @@ String fmComm = "30.00";
 void onVhffmFreq1Change(char* newValue) {
   fm1 = newValue;
   fmComm = fm1 + fm2 + '.' + fm3 + fm4;
+  line2 = "FM:   " + fmComm;
   redraw = true;
 }
 DcsBios::StringBuffer<1> vhffmFreq1StrBuffer(0x14ea, onVhffmFreq1Change);
@@ -264,6 +260,7 @@ DcsBios::StringBuffer<1> vhffmFreq1StrBuffer(0x14ea, onVhffmFreq1Change);
 void onVhffmFreq2Change(unsigned int newValue) {
   fm2 = String(newValue);
   fmComm = fm1 + fm2 + '.' + fm3 + fm4;
+  line2 = "FM:   " + fmComm;
   redraw = true;
 }
 DcsBios::IntegerBuffer vhffmFreq2Buffer(0x14de, 0x1e00, 9, onVhffmFreq2Change);
@@ -271,6 +268,7 @@ DcsBios::IntegerBuffer vhffmFreq2Buffer(0x14de, 0x1e00, 9, onVhffmFreq2Change);
 void onVhffmFreq3Change(unsigned int newValue) {
   fm3 = String(newValue);
   fmComm = fm1 + fm2 + '.' + fm3 + fm4;
+  line2 = "FM:   " + fmComm;
   redraw = true;
 }
 DcsBios::IntegerBuffer vhffmFreq3Buffer(0x14ea, 0x0f00, 8, onVhffmFreq3Change);
@@ -278,6 +276,7 @@ DcsBios::IntegerBuffer vhffmFreq3Buffer(0x14ea, 0x0f00, 8, onVhffmFreq3Change);
 void onVhffmFreq4Change(char* newValue) {
   fm4 = newValue;
   fmComm = fm1 + fm2 + '.' + fm3 + fm4;
+  line2 = "FM:   " + fmComm;
   redraw = true;
 }
 DcsBios::StringBuffer<1> vhffmFreq4StrBuffer(0x14ec, onVhffmFreq4Change);
@@ -291,19 +290,24 @@ String adfSig = "-1";
 int adfBand = 0;
 unsigned int adfFreq = 0;
 
-#define ADF_FREQ(SF,EF,SV,EV,V) (String(float(((SF - EF) / (SV - EV) * (V - SV) + SF))))
+#define ADF_FREQ(SF,EF,SV,EV,V) (String(int(float(SF - EF) / (SV - EV) * (V - SV) + SF)))
 
 String getAdfFreq(int band, unsigned int val) {
   switch(band) {
     case B190:
       #define SV 0
-      #define EV 3200
+      #define EV 6200
       #define SF 190
-      #define EF 195
+      #define EF 200
       if (val >= SV && val < EV) return ADF_FREQ(SF,EF,SV,EV,val);
-      #define SV 3200
+      #define SV 6200
+      #define EV 9320
+      #define SF 200
+      #define EF 210
+      else if (val >= SV && val < EV) return ADF_FREQ(SF,EF,SV,EV,val);
+      #define SV 9320
       #define EV 48300
-      #define SF 195
+      #define SF 210
       #define EF 342
       else if (val >= SV && val < EV) return ADF_FREQ(SF,EF,SV,EV,val);
       #define SV 48300
@@ -313,12 +317,43 @@ String getAdfFreq(int band, unsigned int val) {
       else return ADF_FREQ(SF,EF,SV,EV,adfFreq);
       break;
     case B400:
-      if (adfFreq >= 0 && adfFreq < 3200) return ADF_FREQ(400.0,410.0,0.0,3200.0,adfFreq);
-      else return ADF_FREQ(410.0,850.0,3200.0,65535.0,adfFreq);
+      #define SV 0
+      #define EV 6681
+      #define SF 400
+      #define EF 420
+      if (val >= SV && val < EV) return ADF_FREQ(SF,EF,SV,EV,val);
+      #define SV 6681
+      #define EV 13569
+      #define SF 420
+      #define EF 450
+      else if (val >= SV && val < EV) return ADF_FREQ(SF,EF,SV,EV,val);
+      #define SV 13569
+      #define EV 16809
+      #define SF 450
+      #define EF 477
+      else if (val >= SV && val < EV) return ADF_FREQ(SF,EF,SV,EV,val);
+      #define SV 16809
+      #define EV 65535
+      #define SF 477
+      #define EF 850
+      else return ADF_FREQ(SF,EF,SV,EV,adfFreq);
       break;
     case B850:
-      if (adfFreq >= 0 && adfFreq < 3200) return ADF_FREQ(850,875,0,3200,adfFreq);
-      else return ADF_FREQ(875,1800,3200,65535,adfFreq);
+      #define SV 0
+      #define EV 6681
+      #define SF 850
+      #define EF 900
+      if (val >= SV && val < EV) return ADF_FREQ(SF,EF,SV,EV,val);
+      #define SV 6681
+      #define EV 12858
+      #define SF 900
+      #define EF 986
+      else if (val >= SV && val < EV) return ADF_FREQ(SF,EF,SV,EV,val);
+      #define SV 12858
+      #define EV 65535
+      #define SF 986
+      #define EF 1800
+      else return ADF_FREQ(SF,EF,SV,EV,adfFreq);
       break;
   }
   return String('?');
@@ -327,6 +362,7 @@ String getAdfFreq(int band, unsigned int val) {
 void onAdfBandChange(unsigned int newValue) {
   adfBand = newValue;
   adfNav = getAdfFreq(adfBand,adfFreq);
+  line4 = "NAV: " + adfNav + " " + adfSig;
   redraw = true;
 }
 DcsBios::IntegerBuffer adfBandBuffer(0x14fc, 0x0003, 0, onAdfBandChange);
@@ -334,22 +370,17 @@ DcsBios::IntegerBuffer adfBandBuffer(0x14fc, 0x0003, 0, onAdfBandChange);
 void onAdfFreqChange(unsigned int newValue) {
   adfFreq = newValue;
   adfNav = getAdfFreq(adfBand,adfFreq);
+  line4 = "NAV: " + adfNav + " " + adfSig;
   redraw = true;
 }
 DcsBios::IntegerBuffer adfFreqBuffer(0x1426, 0xffff, 0, onAdfFreqChange);
 
 void onAdfSignalChange(unsigned int newValue) {
-    adfSig = String((float)newValue / 65535.0);
-    redraw = true;
+  adfSig = String((float)newValue / 65535.0);
+  line4 = "NAV: " + adfNav + " " + adfSig;
+  redraw = true;
 }
 DcsBios::IntegerBuffer adfSignalBuffer(0x1428, 0xffff, 0, onAdfSignalChange);
-
-void onLowRpmIndChange(unsigned int newValue) {
-    //module1.setLED(TM1638_COLOR_RED, newValue);
-}
-DcsBios::IntegerBuffer lowRpmIndBuffer(0x1416, 0x0080, 7, onLowRpmIndChange);
-
-DcsBios::LED lowRpmInd(0x1416, 0x0080, 13);
 
 /* paste code snippets from the reference documentation here */
 void setup() {
@@ -359,12 +390,6 @@ void setup() {
 void loop() {
   DcsBios::loop();
   if (redraw) {
-    line0 = "UHF: " + uhfFreq;
-    line1 = "VHF: " + vhfComm;
-    line2 = "FM:   " + fmComm;
-    line3 = "NAV: " + vhfNav;
-    line4 = "NAV: " + adfNav + " " + adfSig;
-
     u8g.firstPage();
     do {
       draw();
@@ -372,7 +397,7 @@ void loop() {
     redraw = false;
   }
   if (updateModule1) {
-    snprintf(module1Text, sizeof(module1Text), "    %4d", iasRoof);
+    snprintf(module1Text, sizeof(module1Text), "%4s%4d", rAlt, iasRoof);
     module1.setDisplayToString(module1Text);
     updateModule1 = false;
   }
@@ -382,7 +407,7 @@ void loop() {
     updateModule2 = false;
   }
   if (updateModule3) {
-    snprintf(module3Text, sizeof(module3Text), "%3s%5d", rAlt, pAlt);
+    snprintf(module3Text, sizeof(module3Text), "%8d", pAlt);
     module3.setDisplayToString(module3Text);
     progressVVI(module3,vviP);
     updateModule3 = false;
