@@ -31,6 +31,10 @@
                     - iwl7260-firmware
                     - libertas-usb8388-firmware
                     - zd1211-firmware
+                      # gnome
+                    - gnome-boxes
+                    - hyperv-daemons
+                    - qemu-guest-agent
           - name: unwanted packages absent
             package: state=absent name={{ item }}
             with_items:
@@ -90,7 +94,7 @@
 
 - name: tasks for user children
   hosts: localhost
-  become: no
+  become: yes
   become_user: children
   tasks:
           - name: set dark theme
