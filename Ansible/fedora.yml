@@ -1,56 +1,172 @@
 ---
-- hosts: localhost
+- name: tasks requiring root
+  hosts: localhost
+  become: yes
   tasks:
-    - name: cleanup NetworkManager
-      package: state=absent name={{ item }}
-      with_items:
-        - NetworkManager-adsl
-        - NetworkManager-bluetooth
-        - NetworkManager-wwan
-    - name: cleanup firmwares
-      package: state=absent name={{ item }}
-      with_items:
-        - atmel-firmware
-        - ipw2100-firmware
-        - ipw2200-firmware
-        - iwl100-firmware
-        - iwl105-firmware
-        - iwl135-firmware
-        - iwl1000-firmware
-        - iwl2000-firmware
-        - iwl2030-firmware
-        - iwl3160-firmware
-        - iwl3945-firmware
-        - iwl4965-firmware
-        - iwl5000-firmware
-        - iwl5150-firmware
-        - iwl6000-firmware
-        - iwl6000g2a-firmware
-        - iwl6000g2b-firmware
-        - iwl6050-firmware
-        - iwl7260-firmware
-        - libertas-usb8388-firmware
-        - zd1211-firmware
-    - name: rpm-fusion present
-      package: state=present name={{ item }}
-      with_items:
-        - https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_version }}.noarch.rpm
-        - https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_distribution_version }}.noarch.rpm
-    - name: install nvidia driver
-      package: state=present name={{ item }}
-      with_items:
-              - akmod-nvidia
-              - xorg-x11-drv-nvidia
-    - name: mplayer present
-      package: state=present name=mplayer
-    - name: steam present
-      package: state=present name=steam
-    - name: libreoffice present
-      package: state=present name={{ item }}
-      with_items:
-              - libreoffice-calc
-              - libreoffice-langpack-cs
-              - libreoffice-writer
-    - name: vlc present
-      package: state=present name=vlc
+          - name: cleanup unwanted packages
+            package: state=absent name={{ item }}
+            with_items:
+                    - NetworkManager-adsl
+                    - NetworkManager-bluetooth
+                    - NetworkManager-wwan
+                      # firmwares
+                    - atmel-firmware
+                    - ipw2100-firmware
+                    - ipw2200-firmware
+                    - iwl100-firmware
+                    - iwl105-firmware
+                    - iwl135-firmware
+                    - iwl1000-firmware
+                    - iwl2000-firmware
+                    - iwl2030-firmware
+                    - iwl3160-firmware
+                    - iwl3945-firmware
+                    - iwl4965-firmware
+                    - iwl5000-firmware
+                    - iwl5150-firmware
+                    - iwl6000-firmware
+                    - iwl6000g2a-firmware
+                    - iwl6000g2b-firmware
+                    - iwl6050-firmware
+                    - iwl7260-firmware
+                    - libertas-usb8388-firmware
+                    - zd1211-firmware
+          - name: unwanted packages absent
+            package: state=absent name={{ item }}
+            with_items:
+                    - PackageKit-command-not-found
+          - name: rpm-fusion present
+            package: state=present name={{ item }}
+            with_items:
+                    - https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_version }}.noarch.rpm
+                    - https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_distribution_version }}.noarch.rpm
+          - name: install nvidia driver
+            package: state=present name={{ item }}
+            with_items:
+                    - akmod-nvidia
+                    - nvidia-settings
+                    - xorg-x11-drv-nvidia
+          - name: multimedia packages present
+            package: state=present name={{ item }}
+            with_items:
+                    - mplayer
+                    - vlc
+          - name: steam present
+            package: state=present name=steam
+          - name: libreoffice present
+            package: state=present name={{ item }}
+            with_items:
+                    - libreoffice-calc
+                    - libreoffice-langpack-cs
+                    - libreoffice-writer
+          - name: other packages present
+            package: state=present name={{ item }}
+            with_items:
+                    - gnome-tweaks
+                    - python2-psutil
+          - name: fedora-workstation-repositories present
+            package: state=present name=fedora-workstation-repositories
+          - name: enable google chrome repository
+            shell: dnf config-manager --set-enabled google-chrome --set-enabled rpmfusion-nonfree-nvidia-driver --set-enabled rpmfusion-nonfree-steam
+          - name: google chrome present
+            package: state=present name=google-chrome-stable
+          - name: add user children
+            user:
+                    name: children
+                    comment: "Děti"
+                    uid: 1033
+                    password: $1$riegrova$lIkxVTEeD9r9tBquvZMwq.
+          - name: create directory for mounting tales
+            file:
+                    path: /home/children/Videa/Pohádky
+                    state: directory
+          - name: mount tales for children
+            mount:
+                    path: /home/children/Videa/Pohádky
+                    src: //10.255.0.10/Tales
+                    opts: "username=children,password=children,ro,uid=1033,gid=1033,_netdev,defaults"
+                    fstype: cifs
+                    state: mounted
+
+- name: tasks for user children
+  hosts: localhost
+  become: no
+  become_user: children
+  tasks:
+          - name: set dark theme
+            dconf:
+                    key: "/org/gnome/desktop/interface/gtk-theme"
+                    value: "'Adwaita-dark'"
+                    state: present
+          - name: enable maximize,minimaze buttons
+            dconf:
+                    key: "/org/gnome/desktop/wm/preferences/button-layout"
+                    value: "'appmenu:minimize,maximize,close'"
+                    state: present
+          - name: disable dynamic workspaces
+            dconf:
+                    key: "/org/gnome/shell/overrides/dynamic-workspaces"
+                    value: "false"
+                    state: present
+          - name: set number of workspaces
+            dconf:
+                    key: "/org/gnome/desktop/wm/preferences/num-workspaces"
+                    value: "1"
+                    state: present
+          - name: show date
+            dconf:
+                    key: "/org/gnome/desktop/interface/clock-show-date"
+                    value: "true"
+                    state: present
+          - name: enabled extensions
+            dconf:
+                    key: "/org/gnome/shell/enabled-extensions"
+                    value: "['background-logo@fedorahosted.org', 'alternate-tab@gnome-shell-extensions.gcampax.github.com', 'places-menu@gnome-shell-extensions.gcampax.github.com', 'window-list@gnome-shell-extensions.gcampax.github.com']"
+                    state: present
+          - name: enabled keyboard layouts
+            dconf:
+                    key: "/org/gnome/desktop/input-sources/sources"
+                    value: "[('xkb', 'us'), ('xkb', 'cz+qwerty')]"
+                    state: present
+
+- name: tasks for current user
+  hosts: localhost
+  become: no
+  tasks:
+          - name: set dark theme
+            dconf:
+                    key: "/org/gnome/desktop/interface/gtk-theme"
+                    value: "'Adwaita-dark'"
+                    state: present
+          - name: enable maximize,minimaze buttons
+            dconf:
+                    key: "/org/gnome/desktop/wm/preferences/button-layout"
+                    value: "'appmenu:minimize,maximize,close'"
+                    state: present
+          - name: disable dynamic workspaces
+            dconf:
+                    key: "/org/gnome/shell/overrides/dynamic-workspaces"
+                    value: "false"
+                    state: present
+          - name: set number of workspaces
+            dconf:
+                    key: "/org/gnome/desktop/wm/preferences/num-workspaces"
+                    value: "1"
+                    state: present
+          - name: show date
+            dconf:
+                    key: "/org/gnome/desktop/interface/clock-show-date"
+                    value: "true"
+                    state: present
+          - name: enabled extensions
+            dconf:
+                    key: "/org/gnome/shell/enabled-extensions"
+                    value: "['background-logo@fedorahosted.org', 'alternate-tab@gnome-shell-extensions.gcampax.github.com', 'places-menu@gnome-shell-extensions.gcampax.github.com', 'window-list@gnome-shell-extensions.gcampax.github.com']"
+                    state: present
+          - name: enabled keyboard layouts
+            dconf:
+                    key: "/org/gnome/desktop/input-sources/sources"
+                    value: "[('xkb', 'us'), ('xkb', 'cz+qwerty')]"
+                    state: present
+
 ...
