@@ -1,10 +1,6 @@
 ---
-- hosts: fedora
+- hosts: localhost
   tasks:
-#    - name: Cinnamon Desktop package group present
-#      dnf:
-#        name: '@Cinnamon Desktop'
-#        state: present
     - name: cleanup NetworkManager
       package: state=absent name={{ item }}
       with_items:
@@ -35,29 +31,26 @@
         - iwl7260-firmware
         - libertas-usb8388-firmware
         - zd1211-firmware
-    - name: negativo17.org nvidia repo
-      get_url:
-        url: https://negativo17.org/repos/fedora-nvidia.repo
-        dest: /etc/yum.repos.d/fedora-nvidia.repo
-    - name: install nvidia driver
-      package: state=present name={{ item }}
-      with_items:
-        - kernel-devel
-        - nvidia-driver
-        - nvidia-driver-libs.i686
-        - nvidia-settings
     - name: rpm-fusion present
       package: state=present name={{ item }}
       with_items:
-        - https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-25.noarch.rpm
-        - https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-25.noarch.rpm
-    - name: steam present
-      package: state=present name=steam
-    - name: bluetooth items not present
-      package: state=absent name=blueberry
-    - name: office packages present
+        - https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_version }}.noarch.rpm
+        - https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_distribution_version }}.noarch.rpm
+    - name: install nvidia driver
       package: state=present name={{ item }}
       with_items:
-        - libreoffice-writer
-        - libreoffice-calc
+              - akmod-nvidia
+              - xorg-x11-drv-nvidia
+    - name: mplayer present
+      package: state=present name=mplayer
+    - name: steam present
+      package: state=present name=steam
+    - name: libreoffice present
+      package: state=present name={{ item }}
+      with_items:
+              - libreoffice-calc
+              - libreoffice-langpack-cs
+              - libreoffice-writer
+    - name: vlc present
+      package: state=present name=vlc
 ...
