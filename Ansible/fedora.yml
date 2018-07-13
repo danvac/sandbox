@@ -6,6 +6,7 @@
           - name: cleanup unwanted packages
             package: state=absent name={{ item }}
             with_items:
+                    - ModemManager
                     - NetworkManager-adsl
                     - NetworkManager-bluetooth
                     - NetworkManager-wwan
@@ -91,6 +92,14 @@
                     opts: "username=children,password=children,ro,uid=1033,gid=1033,_netdev,defaults"
                     fstype: cifs
                     state: mounted
+          - name: disable unwanted services
+            service:
+                    name: "{{ item }}"
+                    enabled: no
+            with_items:
+                    - bolt
+                    - iscsi-shutdown
+                    - wpa_supplicant
 
 - name: tasks for user children
   hosts: localhost
