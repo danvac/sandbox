@@ -36,6 +36,7 @@
                     - gnome-boxes
                     - hyperv-daemons
                     - qemu-guest-agent
+                    - virtualbox-guest-additions
           - name: unwanted packages absent
             package: state=absent name={{ item }}
             with_items:
